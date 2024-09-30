@@ -1,0 +1,135 @@
+Project by: Ayush Nimak
+NetID: an831
+
+---FILES---
+mymalloc.c
+    contains implementation for malloc and free functions
+mymalloc.h
+    header file for mymalloc.c that defines function prototypes
+memtest.c
+    correctness testing for mymalloc.c
+memgrind.c
+    performance testign for mymalloc.c
+mytest.c
+    additional correctness testing for mymalloc.c
+Makefile
+    to efficiently generate object files and executables
+
+---RUNNING FILES---
+Instruction "make" should automatically create and update executables for memtest, memgrind, and mytest
+
+In order to use mytest, uncomment the specific test that you would like to check in memtest.c prior to using the "make" command. 
+
+---TESTING PLAN---
+My testing strategy involved laying out the basic framework for how I wanted malloc() and free() to be implemented, 
+and then going through each edge case and scenario to troubleshoot my code accordingly. 
+
+Firstly, I tested my functions through the given memtest.c program. Then, I made the mytest.c program to specifically check for 
+every edge case and error scenario. Finally, I tested memgrind to ensure the efficiency of my program under extreme conditions. 
+
+The individual ways that I implemented the test cases for memtest.c and memgrind.c are outlined further below. 
+
+---mymalloc.c: FUNCTIONS---
+void *mymalloc(size_t size, char *file, int line)
+    function iterates through memory array to find a valid chunk to hold the requested memory size
+    returns a pointer to the start of the payload
+    error handling explained below
+void myfree(void *ptr, char *file, int line)
+    function iterates through memory array to free the requested pointer
+    error handing explained below
+int checkLeaky()
+    checks if memory array has been properly deallocated
+    returns 1 if there is NO leaky memory
+    returns 0 if there IS leaky memory
+int getSize(char* p)
+    returns the size of the chunk at pointer p
+int getAllocated(char* p)
+    returns the allocation state of the chunk at pointer p
+    returns 0 if memory is unallocated
+    returns 1 if memory is allocated
+    returns 2 if memory has already been freed
+void setSize (char *p, int size)
+    changes the size of chunk at pointer p to provided size
+void setAllocated (char *p, int alloc)
+    changes allocation sate of chunk at pointer p to provided size
+
+---mymalloc.h: FUNCTIONS---
+[Instuctor provided]
+
+---memtest.c: FUNCTIONS---
+[Instructor provide]
+
+---memgrind.c FUNCTIONS---
+t1() [Instructor provided]
+    avg run time = 1 microsecond
+t2() [Instructor provided]
+    avg run time = 15 microseconds
+t3() [Instructor provided]
+    avg run time = 1050 microseconds
+t4() 
+    creates a pointer array
+    mallocs all pointers with 1 byte objects
+    frees all pointers in reverse order
+    this allows us to test edge cases starting from the end of the memory array
+    it also allows us to test repeated coalescence with the next chunk
+    avg run time = 28 microseconds
+t5()
+    creates a pointer array
+    mallocs every pointer
+    frees every other pointer, then goes back and frees remaining pointers
+    this allows us to test repeated coalescence with the previous and next chunk simultaneously
+    avg run time = 21 microseconds
+main()
+    runs above mentioned test 50 times each
+    records start time and end time to measure avg run time
+
+---mytest.c: FUNCTIONS---
+t0()
+    mallocing 0 bytes
+    correctly returns stderr
+t1()
+    mallocing all bytes
+    memory is correctly allocated and correct pointer is returned
+    returns 1 for successful memory allocation and freeing
+t2()
+    attempts to free a pointer that was not malloced
+    correctly returns stderr
+t3()
+    attempts to free pointer from the middle of the memory
+    correctly returns stderr
+t4()
+    attempts to free a pointer that has already been freed
+    correctly returns stderr
+t5()
+    tests coalescence by mallocing consecutive chunks, freeing them, and allocated a larger object in place of the two
+    returns 1 for successful memory allocation and freeing
+t6()
+    tests to ensure that there is no overalp between malloced chunks
+    allocated consecutive blocks and loads unique values
+    dereferences each pointer to ensure that assigned values are printed
+    returns 1 for successful memory allocation and freeing
+
+t7()
+    attempts to allocated too many bytes
+    correctly returns stderr
+
+---ERROR HANDLING---
+
+mymalloc() :
+    1. Malloccing too few bytes (0 or less)
+        checks value of request and returns error if necessary
+    2. Malloccing too many bytes
+        checks if greater than memory array and returns error if necessary
+
+myfree() :
+    1. Freeing something not in the heap
+        compares given pointer to start and end of memory array, returns error if out of bounds
+    2. Freeing something that does not point to start of chunk
+        if pointer is within bounds but is not freed by the end, it does not point to start of chunk
+        returns error if it reaches end of loop
+    3. Double freeing a pointer
+        implemented by using allocated value of 2
+        when a pointer is freed, allocation state is set to 2
+        so when free is called on that pointer, it can tell if it has already been freed
+        returns error if requested pointer has allocated state of 2
+    
